@@ -30,7 +30,7 @@ const init = async () => {
       });
     await mongoose.connect(process.env.MONGO_URI);
     console.log(process.env.MONGO_URI);
-    app.listen(3000, "192.168.29.122", async () => {
+    app.listen(process.env.PORT, async () => {
       console.log("Server started!!!!!!");
     });
     startSocket();

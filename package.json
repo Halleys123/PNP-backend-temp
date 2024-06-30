@@ -5,7 +5,8 @@
   "main": "./src/server.ts",
   "scripts": {
     "start": "ts-node-dev src/server.ts",
-    "test": "jest --watchAll --no-cache"
+    "test": "jest --watchAll --no-cache",
+    "prod": "npm i node src/server.js"
   },
   "repository": {
     "type": "git",

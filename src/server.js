@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -33,22 +24,22 @@ const index = client.initIndex("products");
 exports.index = index;
 // const IP = "192.168.29.122";
 // const PORT: number = process.env.PORT * 1 || 3000;
-const init = () => __awaiter(void 0, void 0, void 0, function* () {
+const init = async () => {
     try {
         if (!process.env.MONGO_URI)
             throw new utils_1.Custom_error({
                 errors: [{ message: "MONGO_URINotFound" }],
                 statusCode: 500,
             });
-        yield mongoose_1.default.connect(process.env.MONGO_URI);
+        await mongoose_1.default.connect(process.env.MONGO_URI);
         console.log(process.env.MONGO_URI);
-        app_1.app.listen(3000, "192.168.29.122", () => __awaiter(void 0, void 0, void 0, function* () {
+        app_1.app.listen(3000, "192.168.29.122", async () => {
             console.log("Server started!!!!!!");
-        }));
+        });
         (0, startSocket_1.startSocket)();
     }
     catch (err) {
         console.error(err);
     }
-});
+};
 init();

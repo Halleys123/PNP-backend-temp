@@ -8,7 +8,6 @@
     "test": "jest --watchAll --no-cache",
     "prod": "npm i node src/server.js"
   },
-  "type": "module",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/AdoredAgenda/PandP.git"

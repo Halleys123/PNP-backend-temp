@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.topSellersList = void 0;
 const utils_1 = require("@himanshu_guptaorg/utils");
@@ -15,7 +6,7 @@ const orders_1 = require("../../../../models/orders/schema/orders");
 const types_1 = require("../../../../types/types");
 const products_1 = require("../../../../models/products/schema/products");
 const sellerPerma_1 = require("../../../../models/seller/schema/sellerPerma");
-const topSellersList = (0, utils_1.async_error_handler)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+const topSellersList = (0, utils_1.async_error_handler)(async (req, res, next) => {
     const { pageNo = 1, pageSize = 10, from, to, isDelivered, orderType, sortBy, } = req.query;
     let parsedPageNo = parseInt(pageNo.toString());
     let parsedPageSize = parseInt(pageSize.toString());
@@ -37,7 +28,7 @@ const topSellersList = (0, utils_1.async_error_handler)((req, res, next) => __aw
     if (orderType)
         filters['orderType'] = orderType;
     filters['orderStatus'] = types_1.OrderStatus.PROCESSED;
-    const successfulOrders = yield orders_1.OrderModel.find(filters);
+    const successfulOrders = await orders_1.OrderModel.find(filters);
     const topProductsMap = {};
     for (let i = 0; i < successfulOrders.length; i++) {
         for (let j = 0; j < successfulOrders[i].productsBought.length; j++) {
@@ -60,7 +51,7 @@ const topSellersList = (0, utils_1.async_error_handler)((req, res, next) => __aw
     const topProducts = Object.values(topProductsMap);
     let topSellersMap = {};
     for (let i = 0; i < topProducts.length; i++) {
-        const product = yield products_1.ProductModel.findById(topProducts[i].productId);
+        const product = await products_1.ProductModel.findById(topProducts[i].productId);
         const sellerIdStr = product.sellerId.toString();
         if (topSellersMap[sellerIdStr]) {
             const sellerData = topSellersMap[sellerIdStr];
@@ -88,8 +79,8 @@ const topSellersList = (0, utils_1.async_error_handler)((req, res, next) => __aw
         else
             return b.netRevenue - a.netRevenue;
     });
-    const topSellersInfo = topSellers.map((elem) => __awaiter(void 0, void 0, void 0, function* () {
-        const seller = yield sellerPerma_1.SellerModelPerma.findById(elem.sellerId, {
+    const topSellersInfo = topSellers.map(async (elem) => {
+        const seller = await sellerPerma_1.SellerModelPerma.findById(elem.sellerId, {
             name: true,
             email: true,
             phoneNumber: true,
@@ -102,10 +93,10 @@ const topSellersList = (0, utils_1.async_error_handler)((req, res, next) => __aw
             totalPriceOfEachProduct: elem.totalPrice,
             netRevenue: elem.netRevenue,
         };
-    }));
+    });
     const length = topSellersList.length;
-    const paginatedTopSellers = (yield Promise.all(topSellersInfo)).slice((parsedPageNo - 1) * parsedPageSize, parsedPageNo * parsedPageSize);
+    const paginatedTopSellers = (await Promise.all(topSellersInfo)).slice((parsedPageNo - 1) * parsedPageSize, parsedPageNo * parsedPageSize);
     const response = new utils_1.Custom_response(true, null, { topSellers: paginatedTopSellers, totalSellers: length }, 'success', 200, null);
     res.status(response.statusCode).json(response);
-}));
+});
 exports.topSellersList = topSellersList;

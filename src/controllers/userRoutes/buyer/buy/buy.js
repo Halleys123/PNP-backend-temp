@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.buy = void 0;
 const utils_1 = require("@himanshu_guptaorg/utils");
@@ -16,7 +7,7 @@ const products_1 = require("../../../../models/products/schema/products");
 const buyerPerma_1 = require("../../../../models/buyer/schema/buyerPerma");
 const orders_1 = require("../../../../models/orders/schema/orders");
 const sellerPerma_1 = require("../../../../models/seller/schema/sellerPerma");
-const buy = (0, utils_1.async_error_handler)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+const buy = (0, utils_1.async_error_handler)(async (req, res, next) => {
     const { cart, addressIndex } = req.body;
     console.log(req.body);
     if (addressIndex == undefined || addressIndex == null) {
@@ -44,7 +35,7 @@ const buy = (0, utils_1.async_error_handler)((req, res, next) => __awaiter(void 
     const productsBought = [];
     const productsBoughtWithCost = [];
     for (const elem of cart) {
-        const product = yield products_1.ProductModel.findById(elem.productId);
+        const product = await products_1.ProductModel.findById(elem.productId);
         if (!product) {
             throw new utils_1.Custom_error({
                 errors: [{ message: 'noSuchProduct' }],
@@ -70,7 +61,7 @@ const buy = (0, utils_1.async_error_handler)((req, res, next) => __awaiter(void 
             quantityBought: quantity,
             cost: product.price * quantity,
         });
-        yield products_1.ProductModel.findByIdAndUpdate(elem.productId, {
+        await products_1.ProductModel.findByIdAndUpdate(elem.productId, {
             $set: { stock: product.stock - quantity },
         });
     }
@@ -82,7 +73,7 @@ const buy = (0, utils_1.async_error_handler)((req, res, next) => __awaiter(void 
         dropAddress: address,
         amount: totalPrice,
     });
-    yield order.save();
+    await order.save();
     const sellerUpdates = productsFromDatabase.map((product, i) => {
         return sellerPerma_1.SellerModelPerma.findByIdAndUpdate(product.sellerId, {
             $push: {
@@ -95,32 +86,32 @@ const buy = (0, utils_1.async_error_handler)((req, res, next) => __awaiter(void 
             },
         });
     });
-    yield Promise.all(sellerUpdates);
-    const orderJwt = yield (0, utils_1.createJwt)({
+    await Promise.all(sellerUpdates);
+    const orderJwt = await (0, utils_1.createJwt)({
         payload: { _id: order._id },
         options: { expiresIn: process.env.MAX_TRANSACTION_TIME },
     }, process.env.TRANSACTION_TOKEN_SECRET);
-    yield buyerPerma_1.BuyerModelPerma.findByIdAndUpdate(req.buyer._id, {
+    await buyerPerma_1.BuyerModelPerma.findByIdAndUpdate(req.buyer._id, {
         $push: { transactions: { orderId: order._id } },
     });
     const expiresIn = process.env.MAX_TRANSACTION_TIME;
-    setTimeout(() => __awaiter(void 0, void 0, void 0, function* () {
-        const myOrder = yield orders_1.OrderModel.findById(order._id);
+    setTimeout(async () => {
+        const myOrder = await orders_1.OrderModel.findById(order._id);
         console.log(myOrder);
-        if ((myOrder === null || myOrder === void 0 ? void 0 : myOrder.orderStatus) == types_1.OrderStatus.PENDING) {
-            yield orders_1.OrderModel.findByIdAndUpdate(myOrder._id, {
+        if (myOrder?.orderStatus == types_1.OrderStatus.PENDING) {
+            await orders_1.OrderModel.findByIdAndUpdate(myOrder._id, {
                 $set: { orderStatus: types_1.OrderStatus.FAILED },
             });
-            const productUpdates = myOrder.productsBought.map((_a) => __awaiter(void 0, [_a], void 0, function* ({ productId, quantityBought }) {
-                const product = yield products_1.ProductModel.findById(productId);
-                yield products_1.ProductModel.findByIdAndUpdate(productId, {
-                    $set: { stock: quantityBought + ((product === null || product === void 0 ? void 0 : product.stock) || 0) },
+            const productUpdates = myOrder.productsBought.map(async ({ productId, quantityBought }) => {
+                const product = await products_1.ProductModel.findById(productId);
+                await products_1.ProductModel.findByIdAndUpdate(productId, {
+                    $set: { stock: quantityBought + (product?.stock || 0) },
                 });
-            }));
-            yield Promise.all(productUpdates);
+            });
+            await Promise.all(productUpdates);
         }
-    }), 1000 * 60 * parseInt(expiresIn.substring(0, expiresIn.length - 1)));
+    }, 1000 * 60 * parseInt(expiresIn.substring(0, expiresIn.length - 1)));
     const response = new utils_1.Custom_response(true, null, { orderToken: orderJwt, totalPrice, productsBoughtWithCost }, 'success', 200, null);
     res.status(response.statusCode).json(response);
-}));
+});
 exports.buy = buy;

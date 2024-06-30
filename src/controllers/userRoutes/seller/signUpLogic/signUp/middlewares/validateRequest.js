@@ -1,20 +1,11 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.validateRequest = void 0;
 const utils_1 = require("@himanshu_guptaorg/utils");
 const sellerTemp_1 = require("../../../../../../models/seller/schema/sellerTemp");
 const sellerPerma_1 = require("../../../../../../models/seller/schema/sellerPerma");
 const types_1 = require("../../../../../../types/types");
-const validateRequest = (0, utils_1.async_error_handler)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+const validateRequest = (0, utils_1.async_error_handler)(async (req, res, next) => {
     const { name, email, phoneNumber, address, password, accountInfo, bankAccount, } = req.body;
     if (!name)
         throw new utils_1.Custom_error({
@@ -45,7 +36,7 @@ const validateRequest = (0, utils_1.async_error_handler)((req, res, next) => __a
             errors: [{ message: 'sendCompleteAddress' }],
             statusCode: 400,
         });
-    const existingUserPhoneTemp = yield sellerTemp_1.SellerModelTemp.findOne({
+    const existingUserPhoneTemp = await sellerTemp_1.SellerModelTemp.findOne({
         phoneNumber,
     });
     const state = { isPhoneActive: true, isEmailActive: true };
@@ -62,7 +53,7 @@ const validateRequest = (0, utils_1.async_error_handler)((req, res, next) => __a
             console.log('Phone');
         }
     }
-    const existingUserEmailTemp = yield sellerTemp_1.SellerModelTemp.findOne({
+    const existingUserEmailTemp = await sellerTemp_1.SellerModelTemp.findOne({
         email,
     });
     if (existingUserEmailTemp) {
@@ -79,9 +70,9 @@ const validateRequest = (0, utils_1.async_error_handler)((req, res, next) => __a
         }
     }
     if (!state.isEmailActive && !state.isPhoneActive)
-        yield sellerTemp_1.SellerModelTemp.deleteOne({ email });
-    const existingUserEmailPerma = yield sellerPerma_1.SellerModelPerma.findOne({ email });
-    const existingUserPhonePerma = yield sellerPerma_1.SellerModelPerma.findOne({
+        await sellerTemp_1.SellerModelTemp.deleteOne({ email });
+    const existingUserEmailPerma = await sellerPerma_1.SellerModelPerma.findOne({ email });
+    const existingUserPhonePerma = await sellerPerma_1.SellerModelPerma.findOne({
         phoneNumber,
     });
     if (existingUserPhonePerma)
@@ -122,16 +113,16 @@ const validateRequest = (0, utils_1.async_error_handler)((req, res, next) => __a
             ],
             statusCode: 400,
         });
-    const sameGstNumberTemp = yield sellerTemp_1.SellerModelTemp.findOne({
+    const sameGstNumberTemp = await sellerTemp_1.SellerModelTemp.findOne({
         'accountInfo.GSTIN': accountInfo.GSTIN,
     });
-    const sameBusinesssRegNoTemp = yield sellerTemp_1.SellerModelTemp.findOne({
+    const sameBusinesssRegNoTemp = await sellerTemp_1.SellerModelTemp.findOne({
         'accountInfo.businessRegistrationNumber': accountInfo.businessRegistrationNumber,
     });
-    const sameGstNumberPerma = yield sellerPerma_1.SellerModelPerma.findOne({
+    const sameGstNumberPerma = await sellerPerma_1.SellerModelPerma.findOne({
         'accountInfo.GSTIN': accountInfo.GSTIN,
     });
-    const sameBusinesssRegNoPerma = yield sellerPerma_1.SellerModelPerma.findOne({
+    const sameBusinesssRegNoPerma = await sellerPerma_1.SellerModelPerma.findOne({
         'accountInfo.businessRegistrationNumber': accountInfo.businessRegistrationNumber,
     });
     if (sameBusinesssRegNoPerma || sameBusinesssRegNoTemp)
@@ -169,5 +160,5 @@ const validateRequest = (0, utils_1.async_error_handler)((req, res, next) => __a
             statusCode: 400,
         });
     next();
-}));
+});
 exports.validateRequest = validateRequest;
